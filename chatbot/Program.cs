@@ -4,6 +4,17 @@ using System.Threading; // Threading for delays
 using System.Collections.Generic; // Generic collections
 using System.Linq; // LINQ for querying
 
+
+
+// Code Attribution:
+// - Code samples and snippets from: https://stackoverflow.com/
+// - C# tutorials and language features from: https://learn.microsoft.com/en-us/dotnet/csharp/
+// - Practical examples of chatbot logic in C#: https://www.c-sharpcorner.com/
+// - Guidance on building .NET applications: https://dotnet.microsoft.com/
+// - C# syntax reference and best practices from: https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/
+
+
+
 namespace chatbot
 {
     class Program
