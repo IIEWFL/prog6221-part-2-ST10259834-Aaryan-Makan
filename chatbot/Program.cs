@@ -1,68 +1,58 @@
-﻿using System;
-using System.Media;
-using System.Threading;
-
-
-
-// Catalin Cimpanu (2019). Microsoft: Using multi-factor authentication blocks 99.9% of account hacks.
-// [online] ZDNET. Available at: https://www.zdnet.com/article/microsoft-using-multi-factor-authentication-blocks-99-9-of-account-hacks/?utm 
-// [Accessed 23 Apr. 2025].
-
-// Federal Trade Commission (2022). How to Recognize and Avoid Phishing Scams.
-// [online] Consumer Information. Available at: https://consumer.ftc.gov/articles/how-recognize-and-avoid-phishing-scams.
-
-// Staysafeonline.org. (2024). Online Safety and Privacy Resources - National Cybersecurity Alliance.
-// [online] Available at: https://www.staysafeonline.org/resources/online-safety-and-privacy.
-
-// w3schools (2022). C# Tutorial (C Sharp).
-// [online] www.w3schools.com. Available at: https://www.w3schools.com/cs/index.php.
-
-// 262588213843476 (2018). Typewriter effect for C# console - https://gfycat.com/ObeseFancyAvians.
-// [online] Gist. Available at: https://gist.github.com/joshschmelzle/610451c749dd14bb777a?utm 
-// [Accessed 23 Apr. 2025].
-
-// Image to ASCII: Free ASCII Art Converter. (n.d.). Image to ASCII: Free ASCII Art Converter.
-// [online] Available at: https://www.asciiart.eu/image-to-ascii.
-
-// Elevenlabs (2024). ElevenLabs - Generative AI Text to Speech & Voice Cloning.
-// [online] elevenlabs.io. Available at: https://elevenlabs.io/.
-
+﻿using System; // Basic system functions
+using System.Media; // Audio playback
+using System.Threading; // Threading for delays
+using System.Collections.Generic; // Generic collections
+using System.Linq; // LINQ for querying
 
 namespace chatbot
 {
     class Program
     {
+        private static string userAlias = "Cyber Cadet"; // Default user nickname
+        private static string userInterest = ""; // Stores user's preferred topic
+        private static string lastKeyword = ""; // Tracks the last topic discussed
+        private static Dictionary<string, List<string>> keywordResponses = new Dictionary<string, List<string>>(); // Stores responses by keyword
+        private static Dictionary<string, List<string>> usedResponses = new Dictionary<string, List<string>>(); // Tracks used responses to avoid repetition
+        private static Random random = new Random(); // Random number generator
+
+        // Delegate for selecting responses dynamically
+        delegate string ResponseSelector(string keyword);
+
         static void Main(string[] args)
         {
             // Set the console window title
-            Console.Title = " Cybersecurity Awareness Assistant";
+            Console.Title = "Cybersecurity Awareness Assistant";
 
-            // Set the background color and clear the console
+            // Set background color to black and clear the console
             Console.BackgroundColor = ConsoleColor.Black;
             Console.Clear();
 
-            // Play an audio greeting when the app starts
+            // Play an audio greeting at startup
             PlayStartupGreeting();
 
             // Show the ASCII logo
             PrintAsciiArtLogo();
             PrintDivider();
 
-            // Ask for and get the user's name
-            string userAlias = RequestUserName();
+            // Get the user's name
+            userAlias = RequestUserName();
 
-            // Ask how the user is feeling
+            // Ask about the user's mood
             AskUserMood();
 
-            // Show divider and the options menu
+            // Initialize keyword responses and tracking
+            InitializeKeywordResponses();
+            InitializeUsedResponses();
+
+            // Show divider and learning topics menu
             PrintDivider();
             DisplayLearningTopics();
 
-            // Begin chatbot interaction loop
+            // Start the main interaction loop
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write("\n>>> "); // Prompt for input
+                Console.Write("\n>>> "); // Prompt user for input
                 Console.ResetColor();
 
                 string userInput = Console.ReadLine();
@@ -79,21 +69,21 @@ namespace chatbot
                 // Check for exit command
                 if (userInput.ToLower().Trim() == "exit")
                 {
-                    ShowTypingEffect($"\n  Logging off... Stay vigilant in the Cyber Space, {userAlias}.", 30);
+                    ShowTypingEffect($"\nLogging off... Stay vigilant in the Cyber Space, {userAlias}.", 30);
                     break;
                 }
 
-                // Handle user input
-                ProcessUserSelection(userInput);
+                // Process the user's input
+                ProcessUserInput(userInput);
             }
         }
 
-        // Play an audio file for greeting
+        // Play an audio greeting file
         static void PlayStartupGreeting()
         {
             try
             {
-                string soundPath = @"Assets\greeting.wav";
+                string soundPath = @"Assets\greeting.wav"; // Path to audio file
                 SoundPlayer greetingPlayer = new SoundPlayer(soundPath);
                 greetingPlayer.Load();
                 greetingPlayer.PlaySync();
@@ -101,7 +91,7 @@ namespace chatbot
             catch (Exception error)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("[Audio Error] " + error.Message);
+                Console.WriteLine("[Audio Error] " + error.Message); // Display error if audio fails
                 Console.ResetColor();
             }
         }
@@ -133,10 +123,10 @@ namespace chatbot
 (____ /   (_/      (_/       (______) (_____)     
 
        
- Hi, I am Grace, your friendly Cybersecurity Awareness Assistant!
- I am here to help you learn about cybersecurity and stay safe online! 
+Hi, I am Grace, your friendly Cybersecurity Awareness Assistant!
+I am here to help you learn about cybersecurity and stay safe online! 
 ";
-            Console.WriteLine(asciiLogo);
+            Console.WriteLine(asciiLogo); // Display the ASCII art
             Console.ResetColor();
         }
 
@@ -144,7 +134,7 @@ namespace chatbot
         static void PrintDivider()
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine("\n" + new string('═', 65) + "\n");
+            Console.WriteLine("\n" + new string('═', 65) + "\n"); // Draw divider line
             Console.ResetColor();
         }
 
@@ -152,15 +142,13 @@ namespace chatbot
         static string RequestUserName()
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.Write("Enter your name: ");
+            Console.Write("Enter your name: "); // Prompt for name
             string enteredName = Console.ReadLine();
             Console.ResetColor();
 
-            // If name is empty, assign default name
-            if (string.IsNullOrWhiteSpace(enteredName)) enteredName = "Cyber Cadet";
-
+            if (string.IsNullOrWhiteSpace(enteredName)) enteredName = "Cyber Cadet"; // Set default if empty
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\nWelcome aboard, {enteredName}!");
+            Console.WriteLine($"\nWelcome aboard, {enteredName}!"); // Welcome message
             Console.ResetColor();
 
             return enteredName;
@@ -169,59 +157,225 @@ namespace chatbot
         // Ask the user how they are doing
         static void AskUserMood()
         {
-            ShowTypingEffect("How are you doing today?", 40);
+            ShowTypingEffect("How are you doing today?", 40); // Prompt for mood with typing effect
 
             Console.ForegroundColor = ConsoleColor.Cyan;
-            string moodInput = Console.ReadLine().ToLower();
+            string moodInput = Console.ReadLine().ToLower(); // Get user mood
             Console.ResetColor();
 
-            // Respond to different moods
+            // Respond based on detected mood
             if (moodInput.Contains("good") || moodInput.Contains("great") || moodInput.Contains("fine"))
-                ShowTypingEffect(" That's great to hear! Let's dive in!");
+                ShowTypingEffect("That's great to hear! Let's dive in!");
             else if (moodInput.Contains("bad") || moodInput.Contains("not good"))
-                ShowTypingEffect("Sorry to hear that. I'm here to make your day better!");
+                ShowTypingEffect("Sorry to hear that. I'm here to make your day better with some tips!");
+            else if (moodInput.Contains("worried"))
+                ShowTypingEffect("I can sense you're worried. Let's tackle that together with some advice!");
+            else if (moodInput.Contains("frustrated"))
+                ShowTypingEffect("I understand that can be frustrating. I'm here to help simplify things for you!");
+            else if (moodInput.Contains("curious"))
+                ShowTypingEffect("Great to see your curiosity! I’ve got lots of tips to share!");
             else
                 ShowTypingEffect("Got it! Let's keep moving forward into cyberspace!");
         }
 
-        // Display available topics for the user to choose
-        static void DisplayLearningTopics()
+        // Initialize keyword responses with multiple options
+        static void InitializeKeywordResponses()
         {
-            ShowTypingEffect(" Select a topic to begin learning:\n", 30);
-            ShowTypingEffect("  1️ Password Safety");
-            ShowTypingEffect("  2️ Phishing Scams");
-            ShowTypingEffect("  3️ Safe Browsing Tips");
-            ShowTypingEffect("   Type 'exit' to end the session.");
+            keywordResponses["password"] = new List<string>
+            {
+                "Using strong, unique passwords is key to protecting your accounts. Aim for at least 12 characters with a mix of letters, numbers, and symbols. Avoid personal info like your name or birthday!",
+                "A good password habit is to never reuse passwords across sites. If one gets hacked, others stay safe. Consider using a password manager to generate and store complex passwords.",
+                "Boost security with two-factor authentication (2FA). It adds a second step, like a code from your phone, making it nearly impossible for hackers to break in even with your password.",
+                "Change your passwords every few months to reduce the risk of them being compromised over time. Use a mix of random characters for maximum strength.",
+                "Avoid writing passwords down where others can find them. Instead, rely on a secure digital password manager to keep them safe and accessible only to you."
+            };
+            keywordResponses["scam"] = new List<string>
+            {
+                "Watch out for phishing scams! Emails asking for personal info are a red flag—verify the sender by checking the email address carefully.",
+                "Scammers often pose as trusted organizations. Always contact the company directly using a known phone number or website to confirm suspicious messages.",
+                "If an offer seems too good to be true, it probably is. Avoid clicking links in unexpected texts or emails to prevent malware installation.",
+                "Be cautious of urgent messages claiming your account is at risk. Legitimate organizations rarely ask for sensitive info via email—call them to verify.",
+                "Look for spelling or grammar errors in messages, a common sign of phishing. Legit companies usually maintain professional communication."
+            };
+            keywordResponses["privacy"] = new List<string>
+            {
+                "Protect your privacy by reviewing app permissions. Only allow access to what’s necessary, like camera or location, to limit data exposure.",
+                "Use HTTPS websites to encrypt your data. That 'S' in the URL ensures your browsing is secure from interception by hackers.",
+                "Consider clearing your browser cookies regularly to reduce tracking of your online habits and protect your personal information.",
+                "Adjust your social media privacy settings to control who can see your posts and personal details—limit access to friends only if possible.",
+                "Use a VPN when on public Wi-Fi to encrypt your internet connection and prevent others from snooping on your online activities."
+            };
         }
 
-        // Process user's topic selection
-        static void ProcessUserSelection(string choice)
+        // Initialize tracking for used responses
+        static void InitializeUsedResponses()
         {
-            choice = choice.ToLower();
+            foreach (var keyword in keywordResponses.Keys) // For each keyword
+            {
+                usedResponses[keyword] = new List<string>(); // Initialize empty list for used responses
+            }
+        }
 
-            if (choice.Contains("1") || choice.Contains("password"))
+        // Display available learning topics
+        static void DisplayLearningTopics()
+        {
+            ShowTypingEffect("Select a topic to begin learning:\n", 30); // Display menu with effect
+            ShowTypingEffect("1️ Password Safety");
+            ShowTypingEffect("2️ Phishing Scams");
+            ShowTypingEffect("3️ Safe Browsing Tips");
+            ShowTypingEffect("Type 'exit' to end the session.");
+            ShowTypingEffect("Or ask about 'password', 'scam', or 'privacy' for more info!");
+        }
+
+        // Process user input with flow, memory, and sentiment
+        static void ProcessUserInput(string input)
+        {
+            input = input.ToLower(); // Convert input to lowercase
+
+            // Detect sentiment in input
+            bool sentimentDetected = false;
+            string sentimentResponse = "";
+            if (input.Contains("worried"))
             {
-                ShowTypingEffect(" Tip: Using strong, unique passwords is one of the best ways to protect your online accounts. A good password should be at least 12 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special symbols. Avoid using common words or personal information like your name or birthday. Also, it’s important not to reuse passwords across different accounts—if one account gets compromised, others could be at risk too.\r\nFor extra protection, enable two-factor authentication (2FA) wherever possible. This adds an extra step when logging in, like entering a code sent to your phone or generated by an authentication app. Even if someone manages to get your password, they won’t be able to access your account without that second factor. Combining strong passwords with 2FA makes it much harder for attackers to break into your accounts.\r\n");
+                sentimentDetected = true;
+                sentimentResponse = "It’s completely understandable to feel that way. Let’s address your concerns.";
             }
-            else if (choice.Contains("2") || choice.Contains("phishing"))
+            else if (input.Contains("frustrated"))
             {
-                ShowTypingEffect(" Tip: Phishing is a common trick cybercriminals use to steal your personal information. These scams often come in the form of emails or messages that seem urgent—like saying your account will be locked or that you've won something. They try to get you to click on a link or open an attachment, which can lead to malware or fake websites designed to steal your login details. It's best to avoid clicking on anything if the message seems even a little suspicious.\r\nTo stay safe, always take a moment to verify who the message is really from. Even if it looks like it’s from a trusted source, double-check the email address or contact the sender directly through a known and trusted method. If something feels off, trust your instincts. Being cautious with emails and messages can protect you from falling victim to phishing scams.\r\n");
+                sentimentDetected = true;
+                sentimentResponse = "I understand that can be frustrating. Let’s break this down together.";
             }
-            else if (choice.Contains("3") || choice.Contains("browsing"))
+            else if (input.Contains("curious"))
             {
-                ShowTypingEffect("Tip: When you're browsing the internet, it's important to stay on secure websites—look for URLs that start with HTTPS instead of just HTTP. That little “S” means the site encrypts the data you send, making it harder for hackers to intercept your information. It’s a small detail that makes a big difference in keeping your personal info safe.\r\nAlso, be careful with pop-ups and flashy ads, especially the ones that seem too good to be true or ask you to click quickly. These can sometimes lead to harmful sites or even download malware onto your device. To stay protected, always keep your browser and antivirus software up to date. Updates often include fixes for security vulnerabilities, so running the latest version helps block threats before they reach you.\r\n");
+                sentimentDetected = true;
+                sentimentResponse = "I love your curiosity! Let’s explore that topic further.";
             }
-            else
+
+            // Map related terms to keywords
+            string keyword = "";
+            if (input.Contains("password") || input.Contains("passwords"))
+                keyword = "password";
+            else if (input.Contains("scam") || input.Contains("phishing"))
+                keyword = "scam";
+            else if (input.Contains("privacy"))
+                keyword = "privacy";
+
+            // Set user interest if mentioned
+            if (input.Contains("interested") && (input.Contains("password") || input.Contains("scam") || input.Contains("privacy")))
             {
-                ShowTypingEffect(" I didn’t catch that. Try selecting 1, 2, or 3");
+                userInterest = keyword;
+                ShowTypingEffect($"Great! I'll remember that you're interested in {userInterest}. It's a crucial part of staying safe online!");
+                lastKeyword = userInterest;
+                return;
             }
+
+            // Handle follow-ups or confusion
+            if (input.Contains("more") || input.Contains("explain") || input.Contains("confused"))
+            {
+                // Check if the input contains a keyword, and if so, override lastKeyword
+                string topicToExpand = lastKeyword;
+                if (!string.IsNullOrEmpty(keyword)) // Override with new keyword if present
+                {
+                    topicToExpand = keyword;
+                    lastKeyword = keyword; // Update lastKeyword to the new topic
+                }
+                else if (string.IsNullOrEmpty(topicToExpand))
+                {
+                    if (!string.IsNullOrEmpty(userInterest))
+                        topicToExpand = userInterest;
+                    else
+                    {
+                        ShowTypingEffect("Could you let me know what topic you'd like more details on?");
+                        return;
+                    }
+                }
+
+                ResponseSelector selector = GetRandomResponse;
+                string response = selector(topicToExpand);
+                if (sentimentDetected)
+                    ShowTypingEffect($"{sentimentResponse} Let me expand on {topicToExpand}: {response}");
+                else
+                    ShowTypingEffect($"Let me expand on {topicToExpand}: {response}");
+                return;
+            }
+
+            // Keyword recognition and random responses
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                lastKeyword = keyword;
+                if (string.IsNullOrEmpty(userInterest))
+                    userInterest = keyword; // Set userInterest for better flow
+
+                ResponseSelector selector = GetRandomResponse;
+                string response = selector(keyword);
+                if (sentimentDetected)
+                    ShowTypingEffect($"{sentimentResponse} {response}");
+                else
+                    ShowTypingEffect(response);
+
+                if (!string.IsNullOrEmpty(userInterest) && keyword == userInterest)
+                    ShowTypingEffect($"Since you're into {userInterest}, you might also check your account security settings!");
+                return;
+            }
+            else if (input.Contains("1"))
+            {
+                lastKeyword = "password";
+                if (string.IsNullOrEmpty(userInterest))
+                    userInterest = "password";
+                ResponseSelector selector = GetRandomResponse;
+                ShowTypingEffect(selector("password"));
+                return;
+            }
+            else if (input.Contains("2"))
+            {
+                lastKeyword = "scam";
+                if (string.IsNullOrEmpty(userInterest))
+                    userInterest = "scam";
+                ResponseSelector selector = GetRandomResponse;
+                ShowTypingEffect(selector("scam"));
+                return;
+            }
+            else if (input.Contains("3") || input.Contains("browsing"))
+            {
+                lastKeyword = "browsing";
+                ShowTypingEffect("Tip: Use HTTPS sites to encrypt your data and keep your browser updated to patch security holes. Avoid clicking suspicious pop-ups!");
+                return;
+            }
+
+            // Default error handling
+            ShowTypingEffect("I'm not sure I understand. Can you try rephrasing or selecting 1, 2, or 3?");
+        }
+
+        // Get a random response without repetition until all are used
+        static string GetRandomResponse(string keyword)
+        {
+            if (!keywordResponses.ContainsKey(keyword))
+                return "No response available for this topic.";
+
+            var responses = keywordResponses[keyword];
+            var used = usedResponses[keyword];
+
+            // Reset used responses if all have been used
+            if (used.Count == responses.Count)
+                used.Clear();
+
+            // Get remaining unused responses
+            var availableResponses = responses.Where(r => !used.Contains(r)).ToList();
+            if (availableResponses.Count == 0)
+                return "No new responses available for this topic.";
+
+            // Select a random unused response
+            string selectedResponse = availableResponses[random.Next(availableResponses.Count)];
+            used.Add(selectedResponse);
+
+            return selectedResponse;
         }
 
         // Simulate a typewriter text effect
         static void ShowTypingEffect(string message, int delay = 30)
         {
             Console.ForegroundColor = ConsoleColor.White;
-            foreach (char ch in message)
+            foreach (char ch in message) // Print each character with a delay
             {
                 Console.Write(ch);
                 Thread.Sleep(delay);
